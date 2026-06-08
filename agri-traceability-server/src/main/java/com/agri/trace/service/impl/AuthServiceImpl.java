@@ -7,10 +7,12 @@ import com.agri.trace.dto.LoginDTO;
 import com.agri.trace.entity.BizProducer;
 import com.agri.trace.entity.SysMenu;
 import com.agri.trace.entity.SysRole;
+import com.agri.trace.entity.SysRoleMenu;
 import com.agri.trace.entity.SysUser;
 import com.agri.trace.entity.SysUserRole;
 import com.agri.trace.mapper.BizProducerMapper;
 import com.agri.trace.mapper.SysMenuMapper;
+import com.agri.trace.mapper.SysRoleMenuMapper;
 import com.agri.trace.mapper.SysRoleMapper;
 import com.agri.trace.mapper.SysUserMapper;
 import com.agri.trace.mapper.SysUserRoleMapper;
@@ -30,6 +32,7 @@ public class AuthServiceImpl implements AuthService {
     private final SysUserMapper userMapper;
     private final SysRoleMapper roleMapper;
     private final SysUserRoleMapper userRoleMapper;
+    private final SysRoleMenuMapper roleMenuMapper;
     private final SysMenuMapper menuMapper;
     private final BizProducerMapper producerMapper;
     private final PasswordEncoder passwordEncoder;
@@ -58,7 +61,15 @@ public class AuthServiceImpl implements AuthService {
         AuthInfoVO vo = new AuthInfoVO();
         vo.setUserInfo(user);
         vo.setRoles(rolesOf(userId));
-        vo.setMenus(menuMapper.selectList(new LambdaQueryWrapper<SysMenu>()
+        List<Long> roleIds = roleIdsOf(userId);
+        List<Long> menuIds = roleIds.isEmpty()
+                ? List.of()
+                : roleMenuMapper.selectList(new LambdaQueryWrapper<SysRoleMenu>().in(SysRoleMenu::getRoleId, roleIds))
+                .stream().map(SysRoleMenu::getMenuId).distinct().toList();
+        vo.setMenus(menuIds.isEmpty()
+                ? List.of()
+                : menuMapper.selectList(new LambdaQueryWrapper<SysMenu>()
+                .in(SysMenu::getId, menuIds)
                 .eq(SysMenu::getStatus, 1)
                 .orderByAsc(SysMenu::getSortOrder)));
         BizProducer producer = producerMapper.selectOne(new LambdaQueryWrapper<BizProducer>().eq(BizProducer::getUserId, userId));
@@ -67,12 +78,16 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private List<String> rolesOf(Long userId) {
-        List<Long> roleIds = userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId))
-                .stream().map(SysUserRole::getRoleId).toList();
+        List<Long> roleIds = roleIdsOf(userId);
         if (roleIds.isEmpty()) {
             return List.of();
         }
         return roleMapper.selectList(new LambdaQueryWrapper<SysRole>().in(SysRole::getId, roleIds))
                 .stream().map(SysRole::getRoleCode).toList();
+    }
+
+    private List<Long> roleIdsOf(Long userId) {
+        return userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId))
+                .stream().map(SysUserRole::getRoleId).toList();
     }
 }

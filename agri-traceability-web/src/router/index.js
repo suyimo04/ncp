@@ -23,9 +23,8 @@ export const constantRoutes = [
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
     children: [
-      { path: '/dashboard', alias: '', component: () => import('@/views/dashboard/index.vue'), meta: { title: '首页驾驶舱', icon: 'Odometer' } },
+      { path: '', component: () => import('@/views/dashboard/index.vue'), meta: { title: '首页驾驶舱', icon: 'Odometer' } },
       { path: '/producer', component: () => import('@/views/producer/index.vue'), meta: { title: '经营主体管理', icon: 'User' } },
       { path: '/batch', component: () => import('@/views/batch/index.vue'), meta: { title: '农产品批次', icon: 'Box' } },
       { path: '/test-report', component: () => import('@/views/test-report/index.vue'), meta: { title: '检测报告', icon: 'DocumentChecked' } },
@@ -40,6 +39,7 @@ export const constantRoutes = [
       { path: '/system/menu', component: () => import('@/views/system/Menu.vue'), meta: { title: '菜单管理', icon: 'Menu', roles: ['ADMIN'] } }
     ]
   },
+  { path: '/dashboard', redirect: '/' },
   { path: '/:pathMatch(.*)*', component: () => import('@/views/error/404.vue'), meta: { title: '页面不存在', public: true } }
 ]
 
@@ -78,7 +78,7 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   if (!canVisit(to, userStore.roles)) {
-    next('/dashboard')
+    next('/')
     return
   }
   const appStore = useAppStore()

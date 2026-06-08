@@ -13,10 +13,20 @@
       router
       class="sidebar-menu"
     >
-      <template v-for="item in menus" :key="item.path">
-        <el-menu-item v-if="!item.meta.hidden" :index="item.path">
-          <el-icon><component :is="item.meta.icon || 'Menu'" /></el-icon>
-          <template #title>{{ item.meta.title }}</template>
+      <template v-for="item in menus" :key="item.id || item.path">
+        <el-sub-menu v-if="item.children?.length" :index="String(item.id)">
+          <template #title>
+            <el-icon><component :is="item.icon || 'Menu'" /></el-icon>
+            <span>{{ item.menuName }}</span>
+          </template>
+          <el-menu-item v-for="child in item.children" :key="child.id" :index="child.path">
+            <el-icon><component :is="child.icon || 'Menu'" /></el-icon>
+            <template #title>{{ child.menuName }}</template>
+          </el-menu-item>
+        </el-sub-menu>
+        <el-menu-item v-else :index="item.path">
+          <el-icon><component :is="item.icon || 'Menu'" /></el-icon>
+          <template #title>{{ item.menuName }}</template>
         </el-menu-item>
       </template>
     </el-menu>
@@ -28,19 +38,26 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/store/app'
 import { useUserStore } from '@/store/user'
-import { constantRoutes } from '@/router'
 
 const appStore = useAppStore()
 const userStore = useUserStore()
 const route = useRoute()
 
 const menus = computed(() => {
-  const layout = constantRoutes.find((item) => item.path === '/')
-  return layout.children.filter((item) => {
-    if (item.meta.hidden) return false
-    if (!item.meta.roles) return true
-    return item.meta.roles.some((role) => userStore.roles.includes(role))
+  const source = (userStore.menus || [])
+    .filter((item) => item.status !== 0 && item.menuType !== 3)
+    .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+  const map = new Map()
+  source.forEach((item) => map.set(item.id, { ...item, children: [] }))
+  const tree = []
+  map.forEach((item) => {
+    if (item.parentId && map.has(item.parentId)) {
+      map.get(item.parentId).children.push(item)
+    } else {
+      tree.push(item)
+    }
   })
+  return tree
 })
 </script>
 
