@@ -1,6 +1,7 @@
 package com.agri.trace.service;
 
 import com.agri.trace.dto.PageQueryDTO;
+import com.agri.trace.dto.MenuDTO;
 import com.agri.trace.dto.UserDTO;
 import com.agri.trace.entity.SysMenu;
 import com.agri.trace.entity.SysRole;
@@ -21,4 +22,10 @@ public interface SystemService {
     List<SysRole> roles();
 
     List<SysMenu> menus();
+
+    SysMenu createMenu(MenuDTO dto);
+
+    SysMenu updateMenu(Long id, MenuDTO dto);
+
+    void deleteMenu(Long id);
 }

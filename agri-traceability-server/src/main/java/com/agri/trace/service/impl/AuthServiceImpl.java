@@ -60,18 +60,28 @@ public class AuthServiceImpl implements AuthService {
         }
         AuthInfoVO vo = new AuthInfoVO();
         vo.setUserInfo(user);
-        vo.setRoles(rolesOf(userId));
-        List<Long> roleIds = roleIdsOf(userId);
-        List<Long> menuIds = roleIds.isEmpty()
+        List<String> roles = rolesOf(userId);
+        vo.setRoles(roles);
+        List<SysMenu> menus;
+        if (roles.contains("ADMIN")) {
+            // 管理员固定拥有全部启用菜单，避免菜单初始化或角色关联缺失导致权限不完整。
+            menus = menuMapper.selectList(new LambdaQueryWrapper<SysMenu>()
+                    .eq(SysMenu::getStatus, 1)
+                    .orderByAsc(SysMenu::getSortOrder));
+        } else {
+            List<Long> roleIds = roleIdsOf(userId);
+            List<Long> menuIds = roleIds.isEmpty()
                 ? List.of()
                 : roleMenuMapper.selectList(new LambdaQueryWrapper<SysRoleMenu>().in(SysRoleMenu::getRoleId, roleIds))
                 .stream().map(SysRoleMenu::getMenuId).distinct().toList();
-        vo.setMenus(menuIds.isEmpty()
-                ? List.of()
-                : menuMapper.selectList(new LambdaQueryWrapper<SysMenu>()
-                .in(SysMenu::getId, menuIds)
-                .eq(SysMenu::getStatus, 1)
-                .orderByAsc(SysMenu::getSortOrder)));
+            menus = menuIds.isEmpty()
+                    ? List.of()
+                    : menuMapper.selectList(new LambdaQueryWrapper<SysMenu>()
+                    .in(SysMenu::getId, menuIds)
+                    .eq(SysMenu::getStatus, 1)
+                    .orderByAsc(SysMenu::getSortOrder));
+        }
+        vo.setMenus(menus);
         BizProducer producer = producerMapper.selectOne(new LambdaQueryWrapper<BizProducer>().eq(BizProducer::getUserId, userId));
         vo.setProducerId(producer == null ? null : producer.getId());
         return vo;

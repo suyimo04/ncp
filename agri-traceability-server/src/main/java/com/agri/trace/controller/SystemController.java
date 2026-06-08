@@ -1,6 +1,7 @@
 package com.agri.trace.controller;
 
 import com.agri.trace.common.result.R;
+import com.agri.trace.dto.MenuDTO;
 import com.agri.trace.dto.PageQueryDTO;
 import com.agri.trace.dto.UserDTO;
 import com.agri.trace.entity.SysMenu;
@@ -56,5 +57,21 @@ public class SystemController {
     @GetMapping("/menu/list")
     public R<List<SysMenu>> menus() {
         return R.ok(systemService.menus());
+    }
+
+    @PostMapping("/menu")
+    public R<SysMenu> createMenu(@Valid @RequestBody MenuDTO dto) {
+        return R.ok(systemService.createMenu(dto));
+    }
+
+    @PutMapping("/menu/{id}")
+    public R<SysMenu> updateMenu(@PathVariable Long id, @Valid @RequestBody MenuDTO dto) {
+        return R.ok(systemService.updateMenu(id, dto));
+    }
+
+    @DeleteMapping("/menu/{id}")
+    public R<Void> deleteMenu(@PathVariable Long id) {
+        systemService.deleteMenu(id);
+        return R.ok();
     }
 }

@@ -2,6 +2,7 @@ package com.agri.trace.service.impl;
 
 import com.agri.trace.common.exception.BusinessException;
 import com.agri.trace.common.util.SecurityUtil;
+import com.agri.trace.dto.MenuDTO;
 import com.agri.trace.dto.PageQueryDTO;
 import com.agri.trace.dto.UserDTO;
 import com.agri.trace.entity.SysMenu;
@@ -89,7 +90,40 @@ public class SystemServiceImpl implements SystemService {
 
     @Override
     public List<SysMenu> menus() {
-        return menuMapper.selectList(new LambdaQueryWrapper<SysMenu>().orderByAsc(SysMenu::getSortOrder));
+        return menuMapper.selectList(new LambdaQueryWrapper<SysMenu>()
+                .orderByAsc(SysMenu::getParentId)
+                .orderByAsc(SysMenu::getSortOrder));
+    }
+
+    @Override
+    public SysMenu createMenu(MenuDTO dto) {
+        SecurityUtil.requireRole("ADMIN");
+        SysMenu menu = new SysMenu();
+        fillMenu(menu, dto);
+        menuMapper.insert(menu);
+        return menu;
+    }
+
+    @Override
+    public SysMenu updateMenu(Long id, MenuDTO dto) {
+        SecurityUtil.requireRole("ADMIN");
+        SysMenu menu = menuMapper.selectById(id);
+        if (menu == null) {
+            throw new BusinessException("菜单不存在");
+        }
+        fillMenu(menu, dto);
+        menuMapper.updateById(menu);
+        return menu;
+    }
+
+    @Override
+    public void deleteMenu(Long id) {
+        SecurityUtil.requireRole("ADMIN");
+        Long children = menuMapper.selectCount(new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getParentId, id));
+        if (children > 0) {
+            throw new BusinessException("请先删除子菜单，再删除目录");
+        }
+        menuMapper.deleteById(id);
     }
 
     private void fill(SysUser user, UserDTO dto) {
@@ -98,6 +132,18 @@ public class SystemServiceImpl implements SystemService {
         user.setPhone(dto.getPhone());
         user.setEmail(dto.getEmail());
         user.setStatus(dto.getStatus() == null ? 1 : dto.getStatus());
+    }
+
+    private void fillMenu(SysMenu menu, MenuDTO dto) {
+        menu.setParentId(dto.getParentId() == null ? 0L : dto.getParentId());
+        menu.setMenuName(dto.getMenuName());
+        menu.setMenuType(dto.getMenuType());
+        menu.setIcon(dto.getIcon());
+        menu.setPath(dto.getPath());
+        menu.setComponent(dto.getComponent());
+        menu.setPerms(dto.getPerms());
+        menu.setSortOrder(dto.getSortOrder() == null ? 0 : dto.getSortOrder());
+        menu.setStatus(dto.getStatus() == null ? 1 : dto.getStatus());
     }
 
     private void saveRoles(Long userId, List<Long> roleIds) {
