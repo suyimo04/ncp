@@ -2,12 +2,12 @@ import { useUserStore } from '@/store/user'
 
 export function hasRole(role) {
   const userStore = useUserStore()
-  return userStore.roles.includes(role)
+  return userStore.roles.includes(role) || userStore.roles.includes('ADMIN')
 }
 
 export function hasAnyRole(roles) {
   const userStore = useUserStore()
-  return roles.some((role) => userStore.roles.includes(role))
+  return userStore.roles.includes('ADMIN') || roles.some((role) => userStore.roles.includes(role))
 }
 
 export default {

@@ -45,7 +45,7 @@ function closeTag(path) {
   appStore.removeTag(path)
   if (route.path === path) {
     const last = appStore.tagsViewList[appStore.tagsViewList.length - 1]
-    router.push(last?.path || '/')
+    router.push(last?.path || '/dashboard')
   }
 }
 
@@ -56,7 +56,7 @@ function closeOthers() {
 
 function closeAll() {
   appStore.closeAll()
-  router.push('/')
+  router.push('/dashboard')
 }
 
 function refresh() {

@@ -26,16 +26,17 @@ public class SecurityUtil {
 
     public static boolean hasRole(String roleCode) {
         List<String> roles = currentUser().getRoles();
-        return roles != null && roles.contains(roleCode);
+        return roles != null && (roles.contains(roleCode) || roles.contains("ADMIN"));
     }
 
     public static boolean hasAnyRole(String... roleCodes) {
         List<String> roles = currentUser().getRoles();
-        return roles != null && Arrays.stream(roleCodes).anyMatch(roles::contains);
+        return roles != null && (roles.contains("ADMIN") || Arrays.stream(roleCodes).anyMatch(roles::contains));
     }
 
     public static boolean isProducerOnly() {
-        return hasRole("PRODUCER") && !hasAnyRole("ADMIN", "REGULATOR");
+        List<String> roles = currentUser().getRoles();
+        return roles != null && roles.contains("PRODUCER") && !roles.contains("ADMIN") && !roles.contains("REGULATOR");
     }
 
     public static void requireRole(String... roleCodes) {

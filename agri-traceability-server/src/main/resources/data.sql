@@ -11,7 +11,7 @@ DELETE FROM `sys_role_menu`;
 DELETE FROM `sys_menu`;
 
 INSERT INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `menu_type`, `icon`, `path`, `component`, `perms`, `sort_order`, `status`) VALUES
-(1, 0, '首页驾驶舱', 2, 'Odometer', '/', 'dashboard/index', 'dashboard:view', 1, 1),
+(1, 0, '首页驾驶舱', 2, 'Odometer', '/dashboard', 'dashboard/index', 'dashboard:view', 1, 1),
 (10, 0, '主体管理', 1, 'User', NULL, NULL, NULL, 2, 1),
 (11, 10, '经营主体管理', 2, 'User', '/producer', 'producer/index', 'producer:view', 1, 1),
 (20, 0, '批次管理', 1, 'Box', NULL, NULL, NULL, 3, 1),

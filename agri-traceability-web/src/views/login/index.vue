@@ -43,7 +43,8 @@ async function handleLogin() {
   try {
     await userStore.login(form)
     ElMessage.success('登录成功')
-    router.replace(route.query.redirect || '/')
+    const redirect = route.query.redirect === '/' ? '/dashboard' : route.query.redirect
+    router.replace(redirect || '/dashboard')
   } finally {
     loading.value = false
   }

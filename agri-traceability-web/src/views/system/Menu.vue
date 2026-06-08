@@ -100,23 +100,11 @@ import { Plus } from '@element-plus/icons-vue'
 import AppCard from '@/components/common/AppCard.vue'
 import AppTable from '@/components/common/AppTable.vue'
 import { systemApi } from '@/api/system'
+import { menuPresets } from '@/config/menu'
 
 const typeText = { 1: '目录', 2: '页面', 3: '按钮' }
 const iconOptions = ['Odometer', 'User', 'Box', 'DocumentChecked', 'Stamp', 'Checked', 'Link', 'Connection', 'Setting', 'UserFilled', 'Avatar', 'Menu']
-const presets = [
-  { menuName: '首页驾驶舱', icon: 'Odometer', path: '/', component: 'dashboard/index', perms: 'dashboard:view' },
-  { menuName: '经营主体管理', icon: 'User', path: '/producer', component: 'producer/index', perms: 'producer:view' },
-  { menuName: '农产品批次', icon: 'Box', path: '/batch', component: 'batch/index', perms: 'batch:view' },
-  { menuName: '检测报告', icon: 'DocumentChecked', path: '/test-report', component: 'test-report/index', perms: 'report:view' },
-  { menuName: '合格证列表', icon: 'Stamp', path: '/certificate', component: 'certificate/index', perms: 'certificate:view' },
-  { menuName: '合格证审核', icon: 'Checked', path: '/certificate/audit', component: 'certificate/audit', perms: 'certificate:audit' },
-  { menuName: '存证记录', icon: 'Link', path: '/chain/evidence', component: 'chain/Evidence', perms: 'chain:evidence:view' },
-  { menuName: '链上核验', icon: 'Connection', path: '/chain/verify', component: 'chain/Verify', perms: 'chain:verify' },
-  { menuName: '合约配置', icon: 'Setting', path: '/chain/contract', component: 'chain/Contract', perms: 'chain:contract' },
-  { menuName: '用户管理', icon: 'UserFilled', path: '/system/user', component: 'system/User', perms: 'system:user' },
-  { menuName: '角色管理', icon: 'Avatar', path: '/system/role', component: 'system/Role', perms: 'system:role' },
-  { menuName: '菜单管理', icon: 'Menu', path: '/system/menu', component: 'system/Menu', perms: 'system:menu' }
-]
+const presets = menuPresets
 
 const menus = ref([])
 const visible = ref(false)

@@ -5,9 +5,7 @@ const cachedTags = sessionStorage.getItem('agri_tags')
 export const useAppStore = defineStore('app', {
   state: () => ({
     sidebarOpened: true,
-    tagsViewList: cachedTags
-      ? JSON.parse(cachedTags)
-      : [{ path: '/', title: '首页驾驶舱', affix: true }]
+    tagsViewList: normalizeTags(cachedTags)
   }),
   actions: {
     toggleSidebar() {
@@ -19,7 +17,7 @@ export const useAppStore = defineStore('app', {
       this.tagsViewList.push({
         path: route.path,
         title: route.meta.title,
-        affix: route.path === '/'
+        affix: route.path === '/dashboard'
       })
       this.saveTags()
     },
@@ -40,3 +38,18 @@ export const useAppStore = defineStore('app', {
     }
   }
 })
+
+function normalizeTags(cachedTags) {
+  const home = { path: '/dashboard', title: '首页驾驶舱', affix: true }
+  if (!cachedTags) {
+    return [home]
+  }
+  try {
+    const tags = JSON.parse(cachedTags)
+      .map((tag) => ({ ...tag, path: tag.path === '/' ? '/dashboard' : tag.path, affix: tag.path === '/' || tag.path === '/dashboard' }))
+      .filter((tag, index, arr) => arr.findIndex((item) => item.path === tag.path) === index)
+    return tags.some((tag) => tag.path === '/dashboard') ? tags : [home, ...tags]
+  } catch {
+    return [home]
+  }
+}
