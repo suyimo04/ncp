@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/agri_traceability?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: root
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+jwt:
+  secret: agri-traceability-jwt-secret-key-must-be-long-enough-2026
+  expiration: 86400000
+
+file:
+  upload-path: ./uploads
+
+app:
+  public-verify-url: http://localhost:5173/public/verify
+
+webase:
+  front-url: http://localhost:5002
+  group-id: 1
+  user: admin
+  mock-mode: true
+
+logging:
+  level:
+    com.agri.trace: debug

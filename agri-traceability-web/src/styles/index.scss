@@ -1,0 +1,50 @@
+@use './variables.scss';
+@use './element-theme.scss';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--agri-text);
+  background: var(--agri-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--agri-border);
+  border-radius: var(--agri-radius);
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.hash-text {
+  max-width: 240px;
+  overflow: hidden;
+  font-family: Consolas, Monaco, monospace;
+  color: var(--agri-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

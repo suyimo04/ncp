@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>农产品承诺达标合格证可信存证与追溯系统</title>
+    
+    <!-- 引入 Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- 引入 Element Plus -->
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+    <script src="https://unpkg.com/element-plus"></script>
+    <script src="https://unpkg.com/element-plus/dist/locale/zh-cn.js"></script>
+    <!-- 引入 Element Plus 图标 -->
+    <script src="https://unpkg.com/@element-plus/icons-vue"></script>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1F8A5B',
+                        secondary: '#2F9E7E',
+                        accent: '#F2B84B',
+                        success: '#2EAD67',
+                        warning: '#E6A23C',
+                        danger: '#D94841',
+                        info: '#3A7CA5',
+                        bgMain: '#F5F7F6',
+                        sidebar: '#173B2F',
+                        textMain: '#1F2D2A',
+                        textSub: '#6B7C76',
+                        borderLight: '#DDE5E1',
+                        tableHeader: '#EEF6F2'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 覆盖 Element Plus 主题色及部分全局样式 */
+        :root {
+            --el-color-primary: #1F8A5B;
+            --el-color-success: #2EAD67;
+            --el-color-warning: #E6A23C;
+            --el-color-danger: #D94841;
+            --el-color-info: #3A7CA5;
+            --el-border-radius-base: 6px; /* 控制圆角在8px内 */
+            --el-text-color-primary: #1F2D2A;
+            --el-text-color-regular: #6B7C76;
+            --el-border-color-lighter: #DDE5E1;
+            --el-fill-color-light: #F5F7F6;
+        }
+
+        body {
+            margin: 0;
+            background-color: #F5F7F6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: #1F2D2A;
+        }
+
+        /* 侧边栏菜单样式覆盖 */
+        .el-menu { border-right: none; }
+        .el-menu-item.is-active { background-color: #112A22 !important; color: #fff !important; }
+        .el-menu-item:hover, .el-sub-menu__title:hover { background-color: #1A4436 !important; }
+        
+        /* 表格样式优化 */
+        .el-table th.el-table__cell { background-color: var(--tableHeader) !important; color: #1F2D2A; font-weight: 600; }
+        
+        /* TagsView 滚动条隐藏 */
+        .tags-scrollbar::-webkit-scrollbar { display: none; }
+        .tags-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 哈希省略样式 */
+        .hash-text {
+            font-family: monospace;
+            cursor: pointer;
+        }
+        .hash-text:hover { color: var(--el-color-primary); text-decoration: underline; }
+
+        /* 登录页背景 */
+        .login-bg {
+            background-image: linear-gradient(135deg, #F5F7F6 0%, #E3EBE7 100%);
+            background-size: cover;
+        }
+        .login-card-shadow { box-shadow: 0 10px 25px rgba(23, 59, 47, 0.1); }
+
+        /* 移动端预览框 */
+        .mobile-frame {
+            width: 375px;
+            height: 812px;
+            border: 12px solid #333;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            position: relative;
+            background: #F5F7F6;
+        }
+        .mobile-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 25px;
+            background: #333;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 登录页面 -->
+        <div v-if="page === 'login'" class="min-h-screen login-bg flex items-center justify-center relative overflow-hidden">
+            <!-- 装饰背景元素 -->
+            <div class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20" style="background-image: radial-gradient(#1F8A5B 1px, transparent 1px); background-size: 40px 40px;"></div>
+            
+            <div class="w-[480px] bg-white rounded-xl login-card-shadow p-10 relative z-10 border border-borderLight">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-primary rounded-lg mx-auto flex items-center justify-center mb-4">
+                        <el-icon :size="32" color="#fff"><component is="Link" /></el-icon>
+                    </div>
+                    <h1 class="text-2xl font-bold text-textMain">农产品承诺达标合格证</h1>
+                    <h2 class="text-lg text-textSub mt-1">可信存证与追溯系统</h2>
+                </div>
+                
+                <el-form :model="loginForm" label-position="top" size="large">
+                    <el-form-item>
+                        <el-input v-model="loginForm.username" placeholder="请输入用户名" prefix-icon="User"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" prefix-icon="Lock" show-password></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <div class="flex w-full space-x-4">
+                            <el-input v-model="loginForm.captcha" placeholder="验证码" class="flex-1"></el-input>
+                            <div class="w-28 bg-gray-100 rounded-md flex items-center justify-center text-primary font-bold italic tracking-widest cursor-pointer select-none border border-borderLight">
+                                7A2F
+                            </div>
+                        </div>
+                    </el-form-item>
+                    <el-button type="primary" class="w-full mt-4" @click="handleLogin">登录系统</el-button>
+                </el-form>
+                <div class="text-center mt-6 text-xs text-textSub">
+                    面向县域农业治理 · FISCO BCOS 区块链技术支持
+                </div>
+            </div>
+        </div>
+
+        <!-- 移动端公众扫码验真页 (独立预览模式) -->
+        <div v-else-if="page === 'mobile'" class="min-h-screen bg-gray-200 flex items-center justify-center py-10 relative">
+            <el-button @click="page = 'dashboard'" class="absolute top-4 left-4" icon="Back">返回后台管理</el-button>
+            <div class="mobile-frame">
+                <div class="mobile-notch"></div>
+                <!-- 移动端内容区 -->
+                <div class="h-full overflow-y-auto bg-gray-50 pb-10">
+                    <!-- 顶部 -->
+                    <div class="bg-primary text-white pt-12 pb-16 px-4 text-center rounded-b-[40px] relative">
+                        <h1 class="text-lg font-bold">农产品质量安全验真</h1>
+                        <p class="text-sm opacity-80 mt-1">区块链可信追溯节点</p>
+                    </div>
+                    
+                    <!-- 主体验真卡片 -->
+                    <div class="mx-4 -mt-10 bg-white rounded-xl shadow-sm p-5 border border-gray-100 relative z-10">
+                        <div class="flex items-center justify-between mb-4 border-b border-gray-50 pb-3">
+                            <span class="text-gray-500 text-sm">核验结果</span>
+                            <div class="flex items-center text-success font-bold">
+                                <el-icon class="mr-1"><component is="Select" /></el-icon>
+                                链上核验通过
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mb-6">
+                            <div class="text-2xl font-bold text-gray-800">翠玉小黄瓜</div>
+                            <div class="text-gray-500 text-sm mt-1">NO. HGZ20231015001</div>
+                        </div>
+
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">产品类别</span>
+                                <span class="text-gray-800">新鲜蔬菜</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">生产主体</span>
+                                <span class="text-gray-800">绿源农业合作社</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">产地地址</span>
+                                <span class="text-gray-800 w-48 text-right truncate">青山县白云镇李家村1组</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">采收时间</span>
+                                <span class="text-gray-800">2023-10-14</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">检测结论</span>
+                                <span class="text-success font-medium">合格</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 区块链信息卡片 -->
+                    <div class="mx-4 mt-4 bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                        <div class="flex items-center mb-3">
+                            <el-icon color="#1F8A5B" class="mr-2"><component is="Link" /></el-icon>
+                            <span class="font-bold text-gray-800">区块链存证信息</span>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3 text-xs space-y-2 font-mono break-all">
+                            <div>
+                                <span class="text-gray-500">交易哈希：</span><br>
+                                <span class="text-gray-700">0x8f7a9...3b2c1d4e5f6</span>
+                                <el-icon class="text-primary ml-1 cursor-pointer" @click="$message.success('已复制')"><component is="DocumentCopy" /></el-icon>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">区块高度：</span>
+                                <span class="text-gray-700">14285901</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">存证时间：</span>
+                                <span class="text-gray-700">2023-10-15 09:30:12</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center text-xs text-gray-400">
+                            数据由 FISCO BCOS 区块链提供不可篡改保护
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 后台管理布局 -->
+        <div v-else class="flex h-screen overflow-hidden bg-bgMain">
+            <!-- 侧边栏 -->
+            <aside :class="['bg-sidebar text-white transition-all duration-300 flex flex-col', isCollapse ? 'w-[64px]' : 'w-[220px]']">
+                <div class="h-14 flex items-center justify-center border-b border-[#2A5A4A] overflow-hidden whitespace-nowrap">
+                    <el-icon :size="24" color="#2EAD67" class="min-w-[24px]"><component is="Platform" /></el-icon>
+                    <span v-if="!isCollapse" class="ml-2 font-bold text-sm tracking-wide">农产存证追溯系统</span>
+                </div>
+                <div class="flex-1 overflow-y-auto">
+                    <el-menu
+                        active-text-color="#fff"
+                        background-color="#173B2F"
+                        text-color="#A5B8B1"
+                        :default-active="activeMenu"
+                        :collapse="isCollapse"
+                        :collapse-transition="false"
+                        @select="handleMenuSelect"
+                    >
+                        <el-menu-item index="dashboard">
+                            <el-icon><component is="Odometer" /></el-icon>
+                            <template #title>首页驾驶舱</template>
+                        </el-menu-item>
+                        
+                        <el-sub-menu index="subject">
+                            <template #title>
+                                <el-icon><component is="User" /></el-icon>
+                                <span>主体管理</span>
+                            </template>
+                            <el-menu-item index="subject-list">经营主体管理</el-menu-item>
+                        </el-sub-menu>
+
+                        <el-sub-menu index="batch">
+                            <template #title>
+                                <el-icon><component is="Box" /></el-icon>
+                                <span>批次管理</span>
+                            </template>
+                            <el-menu-item index="batch-list">农产品批次</el-menu-item>
+                        </el-sub-menu>
+
+                        <el-sub-menu index="test">
+                            <template #title>
+                                <el-icon><component is="DocumentChecked" /></el-icon>
+                                <span>检测管理</span>
+                            </template>
+                            <el-menu-item index="test-list">检测报告</el-menu-item>
+                        </el-sub-menu>
+
+                        <el-sub-menu index="cert">
+                            <template #title>
+                                <el-icon><component is="Stamp" /></el-icon>
+                                <span>合格证管理</span>
+                            </template>
+                            <el-menu-item index="cert-apply">合格证申请</el-menu-item>
+                            <el-menu-item index="cert-audit">合格证审核</el-menu-item>
+                        </el-sub-menu>
+
+                        <el-sub-menu index="chain">
+                            <template #title>
+                                <el-icon><component is="Link" /></el-icon>
+                                <span>区块链管理</span>
+                            </template>
+                            <el-menu-item index="chain-record">存证记录</el-menu-item>
+                            <el-menu-item index="chain-verify">链上核验</el-menu-item>
+                        </el-sub-menu>
+                    </el-menu>
+                </div>
+            </aside>
+
+            <!-- 右侧内容区 -->
+            <div class="flex-1 flex flex-col min-w-0">
+                <!-- 顶部栏 -->
+                <header class="h-14 bg-white border-b border-borderLight flex items-center justify-between px-4 shadow-sm z-10">
+                    <div class="flex items-center">
+                        <el-icon class="cursor-pointer text-xl text-textSub hover:text-primary transition-colors" @click="isCollapse = !isCollapse">
+                            <component :is="isCollapse ? 'Expand' : 'Fold'" />
+                        </el-icon>
+                        <el-breadcrumb separator="/" class="ml-4">
+                            <el-breadcrumb-item>首页</el-breadcrumb-item>
+                            <el-breadcrumb-item v-if="currentBreadcrumb">{{ currentBreadcrumb }}</el-breadcrumb-item>
+                        </el-breadcrumb>
+                    </div>
+                    <div class="flex items-center space-x-5">
+                        <el-tooltip content="公众扫码体验" placement="bottom">
+                            <el-icon class="cursor-pointer text-xl text-textSub hover:text-primary" @click="page = 'mobile'"><component is="MobilePhone" /></el-icon>
+                        </el-tooltip>
+                        <el-badge :value="3" class="item mt-1">
+                            <el-icon class="cursor-pointer text-xl text-textSub hover:text-primary"><component is="Bell" /></el-icon>
+                        </el-badge>
+                        <el-dropdown trigger="click">
+                            <span class="flex items-center cursor-pointer text-sm font-medium text-textMain">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center mr-2">管</div>
+                                监管局管理员
+                                <el-icon class="el-icon--right"><component is="arrow-down" /></el-icon>
+                            </span>
+                            <template #dropdown>
+                                <el-dropdown-menu>
+                                    <el-dropdown-item>个人中心</el-dropdown-item>
+                                    <el-dropdown-item divided @click="page = 'login'">退出登录</el-dropdown-item>
+                                </el-dropdown-menu>
+                            </template>
+                        </el-dropdown>
+                    </div>
+                </header>
+
+                <!-- TagsView 横幅标签页 -->
+                <div class="h-9 bg-white border-b border-borderLight flex items-center px-2 shadow-sm tags-scrollbar overflow-x-auto select-none">
+                    <div v-for="(tag, index) in tags" :key="tag.id" 
+                         @click="handleMenuSelect(tag.id)"
+                         @contextmenu.prevent="showContextMenu($event, index)"
+                         :class="['px-3 py-1 text-xs border rounded-sm mr-2 cursor-pointer flex items-center transition-colors', 
+                                  activeMenu === tag.id ? 'bg-primary border-primary text-white' : 'bg-white border-borderLight text-textSub hover:text-primary hover:border-primary']">
+                        <span class="w-1.5 h-1.5 rounded-full mr-2" :class="activeMenu === tag.id ? 'bg-white' : 'bg-transparent'"></span>
+                        {{ tag.name }}
+                        <el-icon v-if="tag.id !== 'dashboard'" class="ml-1 hover:bg-black/20 rounded-full p-0.5" @click.stop="closeTag(index)"><component is="Close" /></el-icon>
+                    </div>
+                </div>
+
+                <!-- 右键菜单 -->
+                <ul v-show="contextMenuVisible" :style="{left: contextMenuLeft + 'px', top: contextMenuTop + 'px'}" class="absolute z-50 bg-white border border-borderLight rounded shadow-md py-1 text-sm text-textMain w-24">
+                    <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">刷新当前</li>
+                    <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" @click="closeTag(contextMenuIndex)">关闭当前</li>
+                    <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">关闭其他</li>
+                    <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">关闭所有</li>
+                </ul>
+
+                <!-- 主内容区 -->
+                <main class="flex-1 overflow-y-auto p-4 relative" @click="contextMenuVisible = false">
+                    
+                    <!-- 1. 首页驾驶舱 -->
+                    <div v-show="activeMenu === 'dashboard'" class="space-y-4">
+                        <!-- 统计卡片 -->
+                        <div class="grid grid-cols-5 gap-4">
+                            <div v-for="item in stats" :key="item.title" class="bg-white p-4 rounded-lg border border-borderLight flex items-center justify-between hover:shadow-md transition-shadow">
+                                <div>
+                                    <div class="text-textSub text-sm mb-1">{{ item.title }}</div>
+                                    <div class="text-2xl font-bold text-textMain">{{ item.value }}</div>
+                                </div>
+                                <div :class="['w-12 h-12 rounded-full flex items-center justify-center', item.bgClass]">
+                                    <el-icon :size="24" :class="item.iconClass"><component :is="item.icon" /></el-icon>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 图表区域 -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg border border-borderLight h-80">
+                                <div class="text-base font-bold border-l-4 border-primary pl-2 mb-4">合格证签发趋势 (近7天)</div>
+                                <div id="lineChart" style="width: 100%; height: 250px;"></div>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border border-borderLight h-80">
+                                <div class="text-base font-bold border-l-4 border-primary pl-2 mb-4">农产品检测合格率</div>
+                                <div id="pieChart" style="width: 100%; height: 250px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- 底部列表 -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg border border-borderLight">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="text-base font-bold border-l-4 border-primary pl-2">最近上链存证</div>
+                                    <el-button type="primary" link>查看更多</el-button>
+                                </div>
+                                <el-table :data="recentChain" size="small" stripe style="width: 100%">
+                                    <el-table-column prop="type" label="业务类型" width="100"></el-table-column>
+                                    <el-table-column prop="hash" label="交易哈希">
+                                        <template #default="scope">
+                                            <el-tooltip :content="scope.row.fullHash" placement="top">
+                                                <span class="hash-text text-primary">{{ scope.row.hash }}</span>
+                                            </el-tooltip>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="time" label="存证时间" width="140"></el-table-column>
+                                </el-table>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border border-borderLight">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="text-base font-bold border-l-4 border-warning pl-2">待审核合格证</div>
+                                    <el-button type="primary" link @click="handleMenuSelect('cert-audit')">去处理</el-button>
+                                </div>
+                                <el-table :data="pendingAudit" size="small" stripe style="width: 100%">
+                                    <el-table-column prop="subject" label="申请主体"></el-table-column>
+                                    <el-table-column prop="product" label="产品名称" width="120"></el-table-column>
+                                    <el-table-column prop="date" label="申请时间" width="100"></el-table-column>
+                                    <el-table-column label="状态" width="80">
+                                        <template #default>
+                                            <el-tag type="warning" size="small">待审核</el-tag>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. 农产品批次管理 (示例页面) -->
+                    <div v-show="activeMenu === 'batch-list'" class="bg-white p-4 rounded-lg border border-borderLight min-h-full">
+                        <!-- 紧凑筛选区 -->
+                        <el-form :inline="true" :model="batchSearch" class="bg-gray-50 p-3 rounded-md mb-4 border border-gray-100 flex flex-wrap gap-2">
+                            <el-form-item label="批次编号" class="mb-0 mr-2"><el-input v-model="batchSearch.code" placeholder="输入编号" clearable class="w-40"/></el-form-item>
+                            <el-form-item label="产品名称" class="mb-0 mr-2"><el-input v-model="batchSearch.name" placeholder="输入名称" clearable class="w-40"/></el-form-item>
+                            <el-form-item label="批次状态" class="mb-0 mr-2">
+                                <el-select v-model="batchSearch.status" placeholder="全部" class="w-32">
+                                    <el-option label="待检测" value="1"></el-option>
+                                    <el-option label="待开证" value="2"></el-option>
+                                    <el-option label="已开证" value="3"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item class="mb-0 ml-auto mr-0">
+                                <el-button type="primary" icon="Search">查询</el-button>
+                                <el-button icon="Refresh">重置</el-button>
+                                <el-button type="success" plain icon="Plus">新增批次</el-button>
+                            </el-form-item>
+                        </el-form>
+
+                        <!-- 表格区 -->
+                        <el-table :data="batchData" style="width: 100%" border>
+                            <el-table-column prop="code" label="批次编号" width="160" show-overflow-tooltip></el-table-column>
+                            <el-table-column prop="name" label="产品名称" width="120"></el-table-column>
+                            <el-table-column prop="subject" label="所属主体" min-width="150" show-overflow-tooltip></el-table-column>
+                            <el-table-column prop="date" label="采收时间" width="110"></el-table-column>
+                            <el-table-column prop="amount" label="批次数量" width="100"></el-table-column>
+                            
+                            <el-table-column label="批次状态" width="90" align="center">
+                                <template #default="scope">
+                                    <el-tag v-if="scope.row.status === '待检测'" type="warning" disable-transitions>{{scope.row.status}}</el-tag>
+                                    <el-tag v-else-if="scope.row.status === '待开证'" color="#E8F4F0" style="color: #2F9E7E; border-color: #A9D6C7;" disable-transitions>{{scope.row.status}}</el-tag>
+                                    <el-tag v-else type="success" disable-transitions>{{scope.row.status}}</el-tag>
+                                </template>
+                            </el-table-column>
+                            
+                            <el-table-column label="质量状态" width="90" align="center">
+                                <template #default="scope">
+                                    <el-tag v-if="scope.row.quality === '未知'" type="info" disable-transitions>未知</el-tag>
+                                    <el-tag v-else-if="scope.row.quality === '合格'" type="success" disable-transitions>合格</el-tag>
+                                    <el-tag v-else type="danger" disable-transitions>不合格</el-tag>
+                                </template>
+                            </el-table-column>
+
+                            <el-table-column label="上链状态" width="90" align="center">
+                                <template #default="scope">
+                                    <el-tag v-if="scope.row.chain === '未上链'" type="info" disable-transitions>未上链</el-tag>
+                                    <el-tag v-else type="success" disable-transitions>已上链</el-tag>
+                                </template>
+                            </el-table-column>
+
+                            <el-table-column label="操作" width="260" fixed="right">
+                                <template #default="scope">
+                                    <el-button link type="primary" size="small">查看</el-button>
+                                    <el-button link type="primary" size="small">编辑</el-button>
+                                    <el-button v-if="scope.row.chain === '未上链'" link type="primary" size="small">存证</el-button>
+                                    <el-button v-if="scope.row.status === '待开证'" link type="success" size="small">申请合格证</el-button>
+                                    <el-button v-if="scope.row.chain === '已上链'" link type="info" size="small">链上详情</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+
+                        <!-- 分页 -->
+                        <div class="flex justify-end mt-4">
+                            <el-pagination background layout="total, prev, pager, next" :total="45" :page-size="10" />
+                        </div>
+                    </div>
+
+                    <!-- 3. 合格证审核页 (包含弹窗示例) -->
+                    <div v-show="activeMenu === 'cert-audit'" class="bg-white p-4 rounded-lg border border-borderLight min-h-full">
+                        <el-form :inline="true" class="bg-gray-50 p-3 rounded-md mb-4 border border-gray-100">
+                            <el-form-item label="合格证编号" class="mb-0"><el-input placeholder="输入编号" class="w-48"/></el-form-item>
+                            <el-form-item label="审核状态" class="mb-0">
+                                <el-select placeholder="待审核" class="w-32">
+                                    <el-option label="待审核" value="1"></el-option>
+                                    <el-option label="已通过" value="2"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item class="mb-0"><el-button type="primary">查询</el-button></el-form-item>
+                        </el-form>
+
+                        <el-table :data="auditData" style="width: 100%" border>
+                            <el-table-column prop="certCode" label="合格证编号" width="180"></el-table-column>
+                            <el-table-column prop="product" label="产品名称" width="120"></el-table-column>
+                            <el-table-column prop="subject" label="申请主体" min-width="150"></el-table-column>
+                            <el-table-column label="检测结论" width="90" align="center">
+                                <template #default><span class="text-success font-bold">合格</span></template>
+                            </el-table-column>
+                            <el-table-column prop="date" label="申请时间" width="160"></el-table-column>
+                            <el-table-column label="审核状态" width="100" align="center">
+                                <template #default="scope">
+                                    <el-tag v-if="scope.row.status === '待审核'" type="warning">待审核</el-tag>
+                                    <el-tag v-else type="success">审核通过</el-tag>
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="操作" width="200" fixed="right">
+                                <template #default="scope">
+                                    <el-button link type="primary" size="small">详情</el-button>
+                                    <el-button v-if="scope.row.status === '待审核'" link type="success" size="small" @click="auditVisible = true">审核</el-button>
+                                    <el-button v-if="scope.row.status === '已通过'" link type="primary" size="small">查看二维码</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+
+                        <!-- 审核弹窗 -->
+                        <el-dialog v-model="auditVisible" title="合格证签发审核" width="500px" destroy-on-close>
+                            <el-form :model="auditForm" label-width="100px" class="pr-6">
+                                <el-form-item label="审核结果">
+                                    <el-radio-group v-model="auditForm.result">
+                                        <el-radio label="pass" class="!text-success">审核通过</el-radio>
+                                        <el-radio label="reject" class="!text-danger">驳回申请</el-radio>
+                                    </el-radio-group>
+                                </el-form-item>
+                                <el-form-item label="有效期至" v-if="auditForm.result === 'pass'">
+                                    <el-date-picker v-model="auditForm.expire" type="date" placeholder="选择有效日期" class="!w-full"/>
+                                </el-form-item>
+                                <el-form-item label="立即存证" v-if="auditForm.result === 'pass'">
+                                    <el-switch v-model="auditForm.toChain" active-text="同步写入区块链" />
+                                </el-form-item>
+                                <el-form-item label="审核意见">
+                                    <el-input v-model="auditForm.remark" type="textarea" :rows="3" placeholder="请输入审核意见（驳回必填）"></el-input>
+                                </el-form-item>
+                            </el-form>
+                            <template #footer>
+                                <span class="dialog-footer">
+                                    <el-button @click="auditVisible = false">取消</el-button>
+                                    <el-button type="primary" @click="auditVisible = false; $message.success('审核处理完成并已上链')">确认提交</el-button>
+                                </span>
+                            </template>
+                        </el-dialog>
+                    </div>
+
+                    <!-- 4. 区块链存证记录页 -->
+                    <div v-show="activeMenu === 'chain-record'" class="bg-white p-4 rounded-lg border border-borderLight min-h-full">
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mr-4">
+                                    <el-icon :size="20" color="#1F8A5B"><component is="Link" /></el-icon>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-textSub">当前区块链网络</div>
+                                    <div class="font-bold text-textMain">FISCO BCOS 国密联盟链节点 <el-tag size="small" type="success" class="ml-2">运行中</el-tag></div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-textSub">当前区块高度</div>
+                                <div class="font-mono text-xl font-bold text-primary">14,285,901</div>
+                            </div>
+                        </div>
+
+                        <el-table :data="chainData" style="width: 100%" border>
+                            <el-table-column prop="type" label="业务类型" width="100"></el-table-column>
+                            <el-table-column prop="code" label="业务编号" width="150"></el-table-column>
+                            <el-table-column label="交易哈希 (TxHash)" min-width="200">
+                                <template #default="scope">
+                                    <el-tooltip :content="scope.row.hash" placement="top">
+                                        <div class="flex items-center">
+                                            <span class="hash-text text-primary">{{ scope.row.shortHash }}</span>
+                                            <el-icon class="ml-1 text-gray-400 cursor-pointer hover:text-primary"><component is="CopyDocument" /></el-icon>
+                                        </div>
+                                    </el-tooltip>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="height" label="区块高度" width="100"></el-table-column>
+                            <el-table-column label="核验状态" width="100" align="center">
+                                <template #default>
+                                    <el-tag type="success">核验通过</el-tag>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="time" label="存证时间" width="160"></el-table-column>
+                            <el-table-column label="操作" width="140" fixed="right">
+                                <template #default>
+                                    <el-button link type="primary" size="small">详情</el-button>
+                                    <el-button link type="primary" size="small">重新核验</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </div>
+
+                    <!-- 占位页面 -->
+                    <div v-show="!['dashboard', 'batch-list', 'cert-audit', 'chain-record'].includes(activeMenu)" class="h-full flex items-center justify-center text-gray-400">
+                        <div class="text-center">
+                            <el-icon :size="48" class="mb-2"><component is="Tools" /></el-icon>
+                            <p>【{{ getMenuName(activeMenu) }}】页面开发中...</p>
+                            <p class="text-sm mt-2">（本原型重点展示核心页面结构与风格）</p>
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, onMounted, nextTick } = Vue;
+        const { ElMessage } = ElementPlus;
+
+        const app = createApp({
+            setup() {
+                const page = ref('login'); // login, dashboard (admin), mobile
+                const isCollapse = ref(false);
+                const activeMenu = ref('dashboard');
+                const currentBreadcrumb = ref('');
+                
+                // TagsView 状态
+                const tags = ref([{ id: 'dashboard', name: '首页驾驶舱' }]);
+                const contextMenuVisible = ref(false);
+                const contextMenuLeft = ref(0);
+                const contextMenuTop = ref(0);
+                const contextMenuIndex = ref(0);
+
+                // 登录表单
+                const loginForm = reactive({ username: 'admin', password: 'password', captcha: '' });
+
+                // 首页数据
+                const stats = ref([
+                    { title: '入驻主体', value: '128', icon: 'User', bgClass: 'bg-blue-50', iconClass: 'text-blue-500' },
+                    { title: '批次建档', value: '1,024', icon: 'Box', bgClass: 'bg-green-50', iconClass: 'text-green-500' },
+                    { title: '检测报告', value: '856', icon: 'DocumentChecked', bgClass: 'bg-purple-50', iconClass: 'text-purple-500' },
+                    { title: '签发合格证', value: '742', icon: 'Stamp', bgClass: 'bg-yellow-50', iconClass: 'text-yellow-500' },
+                    { title: '链上存证', value: '2,622', icon: 'Link', bgClass: 'bg-teal-50', iconClass: 'text-teal-500' }
+                ]);
+                const recentChain = ref([
+                    { type: '批次建档', hash: '0x8f7a...d4e5', fullHash: '0x8f7a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8', time: '10分钟前' },
+                    { type: '检测报告', hash: '0x3c4d...e5f6', fullHash: '0x3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2', time: '1小时前' },
+                    { type: '签发合格证', hash: '0x1a2b...7e8f', fullHash: '0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0', time: '2小时前' }
+                ]);
+                const pendingAudit = ref([
+                    { subject: '绿源合作社', product: '翠玉黄瓜', date: '2023-10-24' },
+                    { subject: '李记农场', product: '有机番茄', date: '2023-10-24' }
+                ]);
+
+                // 批次数据
+                const batchSearch = reactive({ code: '', name: '', status: '' });
+                const batchData = ref([
+                    { code: 'BAT20231024001', name: '翠玉黄瓜', subject: '绿源农业合作社', date: '2023-10-24', amount: '500kg', status: '待开证', quality: '合格', chain: '已上链' },
+                    { code: 'BAT20231023015', name: '红颜草莓', subject: '李记生态农场', date: '2023-10-23', amount: '120盒', status: '已开证', quality: '合格', chain: '已上链' },
+                    { code: 'BAT20231025002', name: '大白菜', subject: '王大伯自营', date: '2023-10-25', amount: '1000kg', status: '待检测', quality: '未知', chain: '未上链' }
+                ]);
+
+                // 审核数据
+                const auditData = ref([
+                    { certCode: 'HGZ20231024001', product: '翠玉黄瓜', subject: '绿源农业合作社', date: '2023-10-24 10:30', status: '待审核' },
+                    { certCode: 'HGZ20231023015', product: '红颜草莓', subject: '李记生态农场', date: '2023-10-23 15:20', status: '已通过' }
+                ]);
+                const auditVisible = ref(false);
+                const auditForm = reactive({ result: 'pass', expire: '', toChain: true, remark: '' });
+
+                // 区块链数据
+                const chainData = ref([
+                    { type: '合格证', code: 'HGZ20231023015', shortHash: '0x8f7a...3b2c', hash: '0x8f7a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8', height: '14285901', time: '2023-10-23 15:25:11' },
+                    { type: '检测报告', code: 'RPT20231023044', shortHash: '0x2c1d...e5f6', hash: '0x2c1d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1', height: '14285850', time: '2023-10-23 14:10:05' },
+                    { type: '批次建档', code: 'BAT20231023015', shortHash: '0x5f6a...9d0e', hash: '0x5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4', height: '14285002', time: '2023-10-23 09:00:12' }
+                ]);
+
+                // 方法
+                const handleLogin = () => {
+                    ElMessage.success('登录成功');
+                    page.value = 'dashboard';
+                    setTimeout(initCharts, 100);
+                };
+
+                const menuMap = {
+                    'dashboard': '首页驾驶舱', 'subject-list': '经营主体管理', 'batch-list': '农产品批次',
+                    'test-list': '检测报告', 'cert-apply': '合格证申请', 'cert-audit': '合格证审核',
+                    'chain-record': '存证记录', 'chain-verify': '链上核验'
+                };
+
+                const getMenuName = (key) => menuMap[key] || '未知页面';
+
+                const handleMenuSelect = (index) => {
+                    activeMenu.value = index;
+                    currentBreadcrumb.value = index === 'dashboard' ? '' : getMenuName(index);
+                    
+                    // 处理 Tags
+                    if (!tags.value.find(t => t.id === index)) {
+                        tags.value.push({ id: index, name: getMenuName(index) });
+                    }
+                    
+                    // 如果切回首页，重新渲染图表
+                    if(index === 'dashboard') {
+                        setTimeout(initCharts, 100);
+                    }
+                };
+
+                const closeTag = (index) => {
+                    const removed = tags.value.splice(index, 1)[0];
+                    if (activeMenu.value === removed.id) {
+                        const next = tags.value[index - 1] || tags.value[0];
+                        handleMenuSelect(next.id);
+                    }
+                    contextMenuVisible.value = false;
+                };
+
+                const showContextMenu = (e, index) => {
+                    contextMenuVisible.value = true;
+                    contextMenuLeft.value = e.clientX;
+                    contextMenuTop.value = e.clientY + 10;
+                    contextMenuIndex.value = index;
+                };
+
+                const initCharts = () => {
+                    if(document.getElementById('lineChart')) {
+                        const lineChart = echarts.init(document.getElementById('lineChart'));
+                        lineChart.setOption({
+                            tooltip: { trigger: 'axis' },
+                            grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                            xAxis: { type: 'category', boundaryGap: false, data: ['10-18', '10-19', '10-20', '10-21', '10-22', '10-23', '10-24'] },
+                            yAxis: { type: 'value' },
+                            series: [{ name: '签发量', type: 'line', smooth: true, itemStyle: { color: '#1F8A5B' }, areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{offset: 0, color: 'rgba(31, 138, 91, 0.3)'}, {offset: 1, color: 'rgba(31, 138, 91, 0)'}]) }, data: [45, 52, 38, 65, 70, 85, 92] }]
+                        });
+                    }
+                    if(document.getElementById('pieChart')) {
+                        const pieChart = echarts.init(document.getElementById('pieChart'));
+                        pieChart.setOption({
+                            tooltip: { trigger: 'item' },
+                            legend: { bottom: '0%', left: 'center' },
+                            color: ['#2EAD67', '#D94841', '#E6A23C'],
+                            series: [{ name: '检测结果', type: 'pie', radius: ['40%', '70%'], avoidLabelOverlap: false, itemStyle: { borderRadius: 5, borderColor: '#fff', borderWidth: 2 }, label: { show: false, position: 'center' }, emphasis: { label: { show: true, fontSize: '18', fontWeight: 'bold' } }, data: [{ value: 830, name: '合格' }, { value: 12, name: '不合格' }, { value: 14, name: '未检出/异常' }] }]
+                        });
+                    }
+                };
+
+                return {
+                    page, isCollapse, activeMenu, tags, currentBreadcrumb, handleMenuSelect, closeTag,
+                    contextMenuVisible, contextMenuLeft, contextMenuTop, contextMenuIndex, showContextMenu, getMenuName,
+                    loginForm, handleLogin,
+                    stats, recentChain, pendingAudit,
+                    batchSearch, batchData,
+                    auditData, auditVisible, auditForm,
+                    chainData
+                };
+            }
+        });
+
+        // 注册所有图标
+        for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+            app.component(key, component);
+        }
+
+        app.use(ElementPlus, { locale: ElementPlusLocaleZhCn });
+        app.mount('#app');
+    </script>
+</body>
+</html>

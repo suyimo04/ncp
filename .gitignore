@@ -1,0 +1,60 @@
+# 本项目源码、README、SQL、合约、需求文档和 package-lock.json 都需要保留。
+# 这里只忽略本地生成物、依赖目录、日志、上传文件和私有环境配置。
+
+# 本地论文/答辩材料，不上传到 GitHub
+基于 FISCO BCOS 的农产品承诺达标合格证可信存证与追溯系统设计与实现-毕业论文.md
+
+# Windows / macOS 本地文件
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# 编辑器与 IDE
+.idea/
+.vscode/
+*.iml
+
+# Java / Maven 后端构建产物
+**/target/
+*.class
+
+# 前端依赖与构建产物
+agri-traceability-web/node_modules/
+agri-traceability-web/dist/
+agri-traceability-web/.vite/
+
+# 运行日志
+*.log
+logs/
+agri-traceability-server/logs/
+agri-traceability-web/vite.log
+
+# 上传文件和运行期临时文件
+uploads/
+agri-traceability-server/uploads/
+tmp/
+temp/
+
+# 本地环境配置。示例文件可提交。
+.env
+.env.*
+!.env.example
+!.env.*.example
+application-local.yml
+application-local.yaml
+*-local.yml
+*-local.yaml
+
+# 区块链节点证书、私钥与本地连接材料
+# qkl 是参考工程，其中 conf 目录存在 sdk.key 等本地密钥文件，不应提交。
+**/src/main/resources/conf/*.key
+**/src/main/resources/conf/*.pem
+**/src/main/resources/conf/*.p12
+**/src/main/resources/conf/*.crt
+**/src/main/resources/conf/*.csr
+
+# 其他打包文件
+*.zip
+*.tar
+*.tar.gz
+*.rar
